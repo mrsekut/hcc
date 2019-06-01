@@ -1,14 +1,14 @@
-# h9cc
+# hcc
 
 ## Docker
 
 ### Build
 
-- `$ docker build -t h9cc .`
+- `$ docker build -t hcc .`
 
 ### Run
 
-- `$ docker run -v "$PWD"/.:/home --rm -ti h9cc`
+- `$ docker run -v "$PWD"/.:/home --rm -ti hcc`
 
 ## Assemble and Run
 

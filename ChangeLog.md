@@ -1,3 +1,3 @@
-# Changelog for h9cc
+# Changelog for hcc
 
 ## Unreleased changes
