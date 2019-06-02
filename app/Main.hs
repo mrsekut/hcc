@@ -1,15 +1,17 @@
 import System.Environment (getArgs)
 -- module Main where
--- import Lib
+-- import Lexer
+
+asmHeader = do
+    mapM_ putStrLn $ [".intel_syntax noprefix", ".global main", "main:"]
+
 
 main :: IO ()
 main = do
     args <- getArgs
     if 1 == length args
     then do
-        putStrLn $ ".intel_syntax noprefix"
-        putStrLn $ ".global main"
-        putStrLn $ "main:"
+        asmHeader
         putStrLn $ "    mov rax," ++ args !! 0
         putStrLn $ "    ret"
     else
