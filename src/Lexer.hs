@@ -6,8 +6,8 @@ module Lexer
     )
 where
 
-c_OPERATORS = ['+', '-']
-c_IDENT_NUM = ['0' .. '9']
+cOPERATORS = ['+', '-']
+cIDENTNUM = ['0' .. '9']
 
 data TokenType = TK_NUM | TK_OP | TK_EOF deriving (Show, Eq)
 data Token = Token {
@@ -19,21 +19,20 @@ data Token = Token {
 -- }
 
 isOperator :: Char -> Bool
-isOperator op = elem op c_OPERATORS
+isOperator op = op `elem` cOPERATORS
 
 isNumber :: Char -> Bool
-isNumber x = elem x c_IDENT_NUM
+isNumber x = x `elem` cIDENTNUM
 
 tokenizeOperator :: String -> [Token]
 tokenizeOperator []       = error "Lexer couldn't parse Operator Literal"
-tokenizeOperator (x : xs) = (Token TK_OP [x]) : lexer xs
+tokenizeOperator (x : xs) = Token TK_OP [x] : lexer xs
 
--- 1,12,123,..
 tokenizeNumber :: String -> String -> [Token]
 tokenizeNumber [] _  = error "Lexer couldn't parse Number Literal"
-tokenizeNumber t  [] = [(Token TK_NUM t)]
+tokenizeNumber t  [] = [Token TK_NUM t]
 tokenizeNumber t (x : xs) | isNumber x = tokenizeNumber (t ++ [x]) xs
-                          | otherwise  = (Token TK_NUM t) : lexer (x : xs)
+                          | otherwise  = Token TK_NUM t : lexer (x : xs)
 
 lexer :: String -> [Token]
 lexer [] = []
