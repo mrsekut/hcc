@@ -1,20 +1,27 @@
 module Main where
 
 import           System.Environment             ( getArgs )
-import           Lexer (lexer)
+import           Lexer
 
--- isFirstTokenNumber :: [Token] -> Bool
--- isFirstTokenNumber = undefined
 
 asmHeader = do
     mapM_ putStrLn $ [".intel_syntax noprefix", ".global main", "main:"]
 
--- compile :: [Token] -> IO ()
--- compile token = do
---     asmHeader
+compile :: [Token] -> IO ()
+compile (x:xs) = do
+    asmHeader
+    putStrLn $ "  mov rax, " ++ valueString x
+    mapM_ putStrLn $ c xs
+    putStrLn $ "  ret"
 
-
-
+c:: [Token] -> [String]
+c [] = []
+c (x:y:xs) = case tokenType x of
+        TK_NUM -> c xs
+        TK_OP -> case valueString x of
+            "+" -> ("  add rax, " ++ (valueString y)) : (c xs)
+            "-" -> ("  sub rax, " ++ (valueString y)) : (c xs)
+        _ -> "error": (c xs)
 
 main :: IO ()
 main = do
@@ -22,9 +29,5 @@ main = do
     case args of
         [] -> putStrLn $ "Incorrect number of arguments"
         _  -> do
-            asmHeader
-            -- tokens <- lexer args !! 0
-            -- -- compile tokens
-            -- putStrLn $ "    mov rax, " ++ args !! 0
-            print $ lexer "3+3"
-
+            let tokens = lexer $ args !! 0
+            compile tokens

@@ -5,3 +5,6 @@ hcc.cabal
 *.o
 tmp*
 hcc
+
+9cc*
+mmap_address.bin
