@@ -44,12 +44,12 @@ lexer (x : xs) | isOperator x = tokenizeOperator (x : xs)
                | isNumber x   = tokenizeNumber [x] xs
                | otherwise    = lexer xs
 
-main = do
-    -- print $ lexer "3+3"
-    -- print $ lexer "3333+33"
-    compile ([ Token { tokenType = TK_NUM, valueString = "3" }
-                    , Token { tokenType = TK_OP, valueString = "+" }
-                    , Token { tokenType = TK_NUM, valueString = "3" }
-                    ]
-                   )
+-- main = do
+--     -- print $ lexer "3+3"
+--     -- print $ lexer "3333+33"
+--     compile ([ Token { tokenType = TK_NUM, valueString = "3" }
+--                     , Token { tokenType = TK_OP, valueString = "+" }
+--                     , Token { tokenType = TK_NUM, valueString = "3" }
+--                     ]
+--                    )
 
