@@ -15,8 +15,12 @@ data Token = Token {
     valueString :: String
 } deriving (Show, Eq)
 
--- data Error loc msg = {
--- }
+
+-- newtype Row = Row Int
+-- newtype Column = Column Int
+-- type Pos = (Row, Column)
+-- type PosToken = [(Token, (Pos, String))]
+
 
 isOperator :: Char -> Bool
 isOperator op = op `elem` cOPERATORS
@@ -40,9 +44,7 @@ lexer (x : xs) | isOperator x = tokenizeOperator (x : xs)
                | isNumber x   = tokenizeNumber [x] xs
                | otherwise    = lexer xs
 
-main = do
-    -- print $ lexer "1+3-"
-    print $ lexer "3+3"
-    print $ lexer "3333+33"
-    -- print $ lexer "33333+3"
+-- main = do
+--     print $ lexer "3+3"
+--     print $ lexer "3333+33"
 

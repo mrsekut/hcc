@@ -1,5 +1,10 @@
 # hcc
 
+## Build
+
+- `$ stack build`
+- `$ stack exec hcc-exe`
+
 ## Docker
 
 ### Build
@@ -21,3 +26,7 @@
 ## Run
 
 - ex. `$ ./main '4'`
+
+## TODO
+
+- [ ] lexer error
