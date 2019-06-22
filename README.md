@@ -3,7 +3,7 @@
 ## Build
 
 - `$ stack build`
-- `$ stack exec hcc-exe`
+- `$ stack exec hcc-exe <args>`
 
 ## Docker
 
@@ -23,9 +23,13 @@
 
 - `# ./tmp`
 
-## Run
+<!-- ## Run
 
-- ex. `$ ./main '4'`
+- ex. `$ ./main '4'` -->
+
+## Test
+
+- `$ stack test`
 
 ## TODO
 

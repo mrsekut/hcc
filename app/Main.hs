@@ -2,6 +2,7 @@ module Main where
 
 import           System.Environment             ( getArgs )
 import           Lexer
+import Parser
 
 
 asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global main", "main:"]
