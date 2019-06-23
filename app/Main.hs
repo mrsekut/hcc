@@ -2,32 +2,59 @@ module Main where
 
 import           System.Environment             ( getArgs )
 import           Lexer
-import Parser
-
+import Parser (parseExpr, expr, Expr(..))
+import           Text.Parsec
 
 asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global main", "main:"]
 
-compile :: [Token] -> IO ()
-compile (x:xs) = do
-    asmHeader
-    putStrLn $ "  mov rax, " ++ valueString x
-    mapM_ putStrLn $ c xs
-    putStrLn "  ret"
 
-c:: [Token] -> [String]
-c [] = []
-c (x:y:xs) = case tokenType x of
-        TK_NUM -> c xs
-        TK_OP -> case valueString x of
-            "+" -> ("  add rax, " ++ valueString y) : c xs
-            "-" -> ("  sub rax, " ++ valueString y) : c xs
-        _ -> "error": c xs
+gen :: Expr -> IO ()
+gen e = case e of
+    Nat i -> do
+        putStrLn $ "    push " ++ (show i)
+    Add e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    add rax, rdi"
+        putStrLn "    push rax"
+    Sub e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    sub rax, rdi"
+        putStrLn "    push rax"
+    Mul e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    imul rdi"
+        putStrLn "    push rax"
+    Div e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cqo"
+        putStrLn "    idiv rdi"
+        putStrLn "    push rax"
+
 
 main :: IO ()
 main = do
+    -- let p = Add (Nat 2) (Nat 3)
+    -- gen p
+
     args <- getArgs
     case args of
         [] -> putStrLn "Incorrect number of arguments"
         _  -> do
-            let tokens = lexer $ head args
-            compile tokens
+            asmHeader
+            case parseExpr (head args) of
+                Right e -> gen e
+                Left e -> print e
+            putStrLn $ "    pop rax"
+            putStrLn $ "    ret"

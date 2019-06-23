@@ -5,6 +5,10 @@
 - `$ stack build`
 - `$ stack exec hcc-exe <args>`
 
+## Compile Example
+
+- `$ stack exec hcc-exe "(3 + 4) - 3 * 5 / 4" > tmp.s`
+
 ## Docker
 
 ### Build
