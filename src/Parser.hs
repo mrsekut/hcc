@@ -1,4 +1,8 @@
-module Parser (expr) where
+module Parser
+    ( expr
+    , Expr(..)
+    )
+where
 
 import           Text.Parsec
 import           Control.Applicative            ( (<$>)
@@ -9,20 +13,21 @@ import           Control.Applicative            ( (<$>)
 import           Text.Parsec.String
 import           Data.Char                      ( digitToInt )
 
-data Expr = Add Expr Expr | Mul Expr Expr | Nat Int deriving Show
+-- TODO: 型をmodule化したい
+data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Nat Int deriving Show
 
--- expr ::= term ('+' expr | term)
+-- expr ::= term ('+' expr | '-' expr) *
 expr :: Parser Expr
 expr = do
     t <- term
-    (Add t <$> (char '+' *> expr)) <|> pure t
+    (Add t <$> (char '+' *> expr)) <|> (Sub t <$> (char '-' *> expr)) <|> pure t
 
 
--- term ::= factor ('*' term | factor)
+-- term ::= factor ('*' term | '/' term) *
 term :: Parser Expr
 term = do
     f <- factor
-    (Mul f <$> (char '*' *> term)) <|> pure f
+    (Mul f <$> (char '*' *> term)) <|> (Div f <$> (char '/' *> term)) <|> pure f
 
 
 -- factor ::= '(' expr ')' | nat
@@ -36,6 +41,7 @@ nat = Nat . digitToInt <$> oneOf ['0' .. '9']
 
 -- parseTest expr "1+2"
 -- > Add (Nat 1) (Nat 2)
+
 
 
 
