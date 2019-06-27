@@ -1,8 +1,10 @@
 module Main where
 
 import           System.Environment             ( getArgs )
-import           Lexer
-import Parser (parseExpr, expr, Expr(..))
+import           Parser                         ( parseExpr
+                                                , expr
+                                                , Expr(..)
+                                                )
 import           Text.Parsec
 
 asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global main", "main:"]
@@ -10,8 +12,7 @@ asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global main", "main:"]
 
 gen :: Expr -> IO ()
 gen e = case e of
-    Nat i -> do
-        putStrLn $ "    push " ++ (show i)
+    Nat i -> putStrLn $ "    push " ++ show i
     Add e1 e2 -> do
         gen e1
         gen e2
@@ -55,6 +56,6 @@ main = do
             asmHeader
             case parseExpr (head args) of
                 Right e -> gen e
-                Left e -> print e
+                Left  e -> print e
             putStrLn $ "    pop rax"
             putStrLn $ "    ret"
