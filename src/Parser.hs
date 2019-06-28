@@ -15,19 +15,15 @@ import           Text.Parsec.String
 import           Data.Char                      ( digitToInt )
 
 
--- TODO: 型をmodule化したい
 data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
           | Div Expr Expr       -- 1 / 2
-        --   | Plus Expr           -- +1
-        --   | Minus Expr          -- -2
           | Nat Int             -- 1,2,..
             deriving Show
 
 -- TODO: Either Monad
 -- TODO: skip space
--- TODO: 2digits
 -- expr ::= term ('+' expr | '-' expr) *
 expr :: Parser Expr
 expr = do
@@ -46,7 +42,8 @@ term = do
 
 -- unary ::= ('+' | '-')? factor
 unary :: Parser Expr
-unary = (char '+' *> factor) <|> Sub (Nat 0) <$> (char '-' *> factor) <|> factor
+unary =
+    (char '+' *> factor) <|> Sub (Nat 0) <$> (char '-' *> factor) <|> factor
 
 
 -- factor ::= '(' expr ')' | nat
@@ -54,9 +51,10 @@ factor :: Parser Expr
 factor = (char '(' *> expr <* char ')') <|> nat
 
 
+
 -- nat ::= '0' | '1' | '2' | ...
 nat :: Parser Expr
-nat = Nat . digitToInt <$> oneOf ['0' .. '9']
+nat = Nat . read <$> many1 digit
 
 
 parseExpr :: String -> Either ParseError Expr
