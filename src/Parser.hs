@@ -5,7 +5,7 @@ module Parser
     )
 where
 
-import           Text.Parsec
+import           Text.Parsec             -- hiding ( spaces )
 import           Control.Applicative            ( (<$>)
                                                 , (*>)
                                                 , (<*)
@@ -23,33 +23,42 @@ data Expr = Add Expr Expr       -- 1 + 2
             deriving Show
 
 -- TODO: Either Monad
--- TODO: skip space
--- expr ::= term ('+' expr | '-' expr) *
+-- TODO: 右結合になっている
+
+-- expr ::= term | term ('+' expr | "-" expr)
 expr :: Parser Expr
 expr = do
-    t <- term
-    (Add t <$> (char '+' *> expr)) <|> (Sub t <$> (char '-' *> expr)) <|> pure t
+    t <- spaces *> term
+    (Add t <$> (spaces *> char '+' *> spaces *> expr))
+        <|> (Sub t <$> (spaces *> char '-' *> spaces *> expr))
+        <|> pure t
 
 
--- term ::= unary ('*' unary | '/' unary) *
+-- term ::= unary | unary ('*' unary |'/' unary)
 term :: Parser Expr
 term = do
-    f <- unary
-    (Mul f <$> (char '*' *> unary))
-        <|> (Div f <$> (char '/' *> unary))
-        <|> pure f
+    u <- spaces *> unary
+    (Mul u <$> (spaces *> char '*' *> spaces *> term))
+        <|> (Div u <$> (spaces *> char '/' *> spaces *> term))
+        <|> pure u
 
 
--- unary ::= ('+' | '-')? factor
+-- unary ::= factor | ('+' | '-') factor
 unary :: Parser Expr
 unary =
-    (char '+' *> factor) <|> Sub (Nat 0) <$> (char '-' *> factor) <|> factor
+    (spaces *> char '+' *> factor)
+        <|> Sub (Nat 0)
+        <$> (spaces *> char '-' *> factor)
+        <|> factor
 
 
 -- factor ::= '(' expr ')' | nat
 factor :: Parser Expr
-factor = (char '(' *> expr <* char ')') <|> nat
-
+factor =
+    (spaces *> char '(' *> spaces *> expr <* spaces <* char ')' <* spaces)
+        <|> spaces
+        *>  nat
+        <*  spaces
 
 
 -- nat ::= '0' | '1' | '2' | ...
