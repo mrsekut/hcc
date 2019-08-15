@@ -1,16 +1,13 @@
 .intel_syntax noprefix
-.global main
-main:
-    push 1
+.global hcc
+hcc:
     push 2
-    push 3
+    push 2
     pop rdi
     pop rax
-    imul rdi
-    push rax
-    pop rdi
-    pop rax
-    add rax, rdi
+    cmp rax, rdi
+    sete al
+    movzb rax, al
     push rax
     pop rax
     ret

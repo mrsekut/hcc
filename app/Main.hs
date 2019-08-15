@@ -12,7 +12,7 @@ asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global hcc", "hcc:"]
 
 gen :: Expr -> IO ()
 gen e = case e of
-    Nat i -> putStrLn $ "    push " ++ show i
+    Nat i     -> putStrLn $ "    push " ++ show i
     Add e1 e2 -> do
         gen e1
         gen e2
@@ -41,6 +41,24 @@ gen e = case e of
         putStrLn "    pop rax"
         putStrLn "    cqo"
         putStrLn "    idiv rdi"
+        putStrLn "    push rax"
+    Eq e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cmp rax, rdi"
+        putStrLn "    sete al"
+        putStrLn "    movzb rax, al"
+        putStrLn "    push rax"
+    Neq e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cmp rax, rdi"
+        putStrLn "    setne al"
+        putStrLn "    movzb rax, al"
         putStrLn "    push rax"
 
 

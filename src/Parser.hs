@@ -19,15 +19,30 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
           | Div Expr Expr       -- 1 / 2
+          | Eq Expr Expr        -- 1 == 2
+          | Neq Expr Expr       -- 1 == 2
           | Nat Int             -- 1,2,..
             deriving Show
 
 -- TODO: Either Monad
 -- TODO: 右結合になっている
-
 -- expr ::= add
 expr :: Parser Expr
-expr = add
+expr = assign
+
+
+-- assigns ::= equality | equality "=" assign
+assign :: Parser Expr
+assign = equality
+
+
+-- equality ::= add | add ("==" relational | "!=" relatoinal)
+equality :: Parser Expr
+equality = do
+    a <- spaces *> add
+    (Eq a <$> (spaces *> string "==" *> spaces *> equality))
+        <|> (Neq a <$> (spaces *> string "!=" *> spaces *> equality))
+        <|> pure a
 
 
 -- add ::= term | term ('+' add | "-" add)
@@ -37,11 +52,6 @@ add = do
     (Add t <$> (spaces *> char '+' *> spaces *> add))
         <|> (Sub t <$> (spaces *> char '-' *> spaces *> add))
         <|> pure t
-
-
--- -- assigns ::=
--- assign :: Parser Expr
--- assinn = undefined
 
 
 -- term ::= unary | unary ('*' unary |'/' unary)
