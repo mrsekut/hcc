@@ -60,6 +60,42 @@ gen e = case e of
         putStrLn "    setne al"
         putStrLn "    movzb rax, al"
         putStrLn "    push rax"
+    Lt e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cmp rax, rdi"
+        putStrLn "    setl al"
+        putStrLn "    movzb rax, al"
+        putStrLn "    push rax"
+    Lte e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cmp rax, rdi"
+        putStrLn "    setle al"
+        putStrLn "    movzb rax, al"
+        putStrLn "    push rax"
+    Gt e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cmp rax, rdi"
+        putStrLn "    setg al"
+        putStrLn "    movzb rax, al"
+        putStrLn "    push rax"
+    Gte e1 e2 -> do
+        gen e1
+        gen e2
+        putStrLn "    pop rdi"
+        putStrLn "    pop rax"
+        putStrLn "    cmp rax, rdi"
+        putStrLn "    setge al"
+        putStrLn "    movzb rax, al"
+        putStrLn "    push rax"
 
 
 main :: IO ()

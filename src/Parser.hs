@@ -21,6 +21,10 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Div Expr Expr       -- 1 / 2
           | Eq Expr Expr        -- 1 == 2
           | Neq Expr Expr       -- 1 == 2
+          | Lt Expr Expr        -- 1 < 2
+          | Gt Expr Expr        -- 1 > 2
+          | Lte Expr Expr       -- 1 <= 2
+          | Gte Expr Expr       -- 1 >= 2
           | Nat Int             -- 1,2,..
             deriving Show
 
@@ -39,9 +43,26 @@ assign = equality
 -- equality ::= add | add ("==" relational | "!=" relatoinal)
 equality :: Parser Expr
 equality = do
+    r <- spaces *> relational
+    (Eq r <$> (spaces *> string "==" *> spaces *> equality))
+        <|> (Neq r <$> (spaces *> string "!=" *> spaces *> equality))
+        <|> pure r
+
+
+-- relational ::= add | add ("<" add | "<=" add | ">" add | ">=" add)
+relational :: Parser Expr
+relational = do
     a <- spaces *> add
-    (Eq a <$> (spaces *> string "==" *> spaces *> equality))
-        <|> (Neq a <$> (spaces *> string "!=" *> spaces *> equality))
+    (do
+            spaces *> char '<'
+            (Lt a <$> (spaces *> relational))
+                <|> (Lte a <$> (char '=' *> spaces *> relational))
+        )
+        <|> (do
+                spaces *> char '>'
+                (Gt a <$> (spaces *> relational))
+                    <|> (Gte a <$> (char '=' *> spaces *> relational))
+            )
         <|> pure a
 
 
@@ -93,7 +114,7 @@ parseExpr = parse expr "* ParseError *"
 -- run expr "1+2"
 -- > Add (Nat 1) (Nat 2)
 run :: Show a => Parser a -> String -> IO ()
-run p input = case parse p "hoge" input of
+run p input = case parse p "hcc" input of
     Left  err -> putStr "parse error at" >> print err
     Right x   -> print x
 

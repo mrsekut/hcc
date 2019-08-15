@@ -1,12 +1,12 @@
 .intel_syntax noprefix
 .global hcc
 hcc:
-    push 2
-    push 2
+    push 12
+    push 5
     pop rdi
     pop rax
     cmp rax, rdi
-    sete al
+    setl al
     movzb rax, al
     push rax
     pop rax
