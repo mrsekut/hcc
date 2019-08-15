@@ -1,9 +1,19 @@
 # hcc
 
+## Example of effective flow
+
+- (on host):
+  - `$ stack build`
+  - `$ docker build -t hcc .`
+  - `$ stack exec hcc-exe "(3 + 4) - 3 * 5 / 4" > tmp.s`
+- (on container):
+  - `# gcc -g main.c tmp.s -o tmp`
+  - `# ./tmp`
+  - `# echo $?`
+
 ## Build
 
 - `$ stack build`
-- `$ stack exec hcc-exe <args>`
 
 ## Compile Example
 
@@ -21,15 +31,11 @@
 
 ## Assemble and Run
 
-- `# gcc -o tmp tmp.s`
+- `# gcc -g main.c tmp.s -o tmp`
 
 ## make Asm file
 
 - `# ./tmp`
-
-<!-- ## Run
-
-- ex. `$ ./main '4'` -->
 
 ## Test
 

@@ -7,7 +7,7 @@ import           Parser                         ( parseExpr
                                                 )
 import           Text.Parsec
 
-asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global main", "main:"]
+asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global hcc", "hcc:"]
 
 
 gen :: Expr -> IO ()

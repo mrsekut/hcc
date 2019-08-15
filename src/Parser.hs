@@ -5,7 +5,7 @@ module Parser
     )
 where
 
-import           Text.Parsec             -- hiding ( spaces )
+import           Text.Parsec
 import           Control.Applicative            ( (<$>)
                                                 , (*>)
                                                 , (<*)
@@ -25,13 +25,23 @@ data Expr = Add Expr Expr       -- 1 + 2
 -- TODO: Either Monad
 -- TODO: 右結合になっている
 
--- expr ::= term | term ('+' expr | "-" expr)
+-- expr ::= add
 expr :: Parser Expr
-expr = do
+expr = add
+
+
+-- add ::= term | term ('+' add | "-" add)
+add :: Parser Expr
+add = do
     t <- spaces *> term
-    (Add t <$> (spaces *> char '+' *> spaces *> expr))
-        <|> (Sub t <$> (spaces *> char '-' *> spaces *> expr))
+    (Add t <$> (spaces *> char '+' *> spaces *> add))
+        <|> (Sub t <$> (spaces *> char '-' *> spaces *> add))
         <|> pure t
+
+
+-- -- assigns ::=
+-- assign :: Parser Expr
+-- assinn = undefined
 
 
 -- term ::= unary | unary ('*' unary |'/' unary)

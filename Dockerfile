@@ -1,5 +1,5 @@
 FROM alpine:3.8
 
-RUN apk add --no-cache gcc libc-dev bash make
+RUN apk add --no-cache gcc libc-dev bash make gdb
 
 WORKDIR /home
