@@ -15,6 +15,7 @@ import           Text.Parsec.String
 import           Data.Char                      ( digitToInt )
 
 
+-- TODO: 型の分割をしたい
 data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
@@ -28,8 +29,7 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Nat Int             -- 1,2,..
             deriving Show
 
--- TODO: Either Monad
--- TODO: 右結合になっている
+
 -- expr ::= add
 expr :: Parser Expr
 expr = assign
@@ -42,46 +42,36 @@ assign = equality
 
 -- equality ::= add | add ("==" relational | "!=" relatoinal)
 equality :: Parser Expr
-equality = do
-    r <- spaces *> relational
-    (Eq r <$> (spaces *> string "==" *> spaces *> equality))
-        <|> (Neq r <$> (spaces *> string "!=" *> spaces *> equality))
-        <|> pure r
+equality = relational `chainl1` equalityop
+
+equalityop :: Parser (Expr -> Expr -> Expr)
+equalityop = choice $ map try [Neq <$ string "!=", Eq <$ string "=="]
 
 
 -- relational ::= add | add ("<" add | "<=" add | ">" add | ">=" add)
 relational :: Parser Expr
-relational = do
-    a <- spaces *> add
-    (do
-            spaces *> char '<'
-            (Lt a <$> (spaces *> relational))
-                <|> (Lte a <$> (char '=' *> spaces *> relational))
-        )
-        <|> (do
-                spaces *> char '>'
-                (Gt a <$> (spaces *> relational))
-                    <|> (Gte a <$> (char '=' *> spaces *> relational))
-            )
-        <|> pure a
+relational = add `chainl1` relop
+
+relop :: Parser (Expr -> Expr -> Expr)
+relop = choice $ map
+    try
+    [Lte <$ string "<=", Lt <$ string "<", Gte <$ string ">=", Gt <$ string ">"]
 
 
 -- add ::= term | term ('+' add | "-" add)
 add :: Parser Expr
-add = do
-    t <- spaces *> term
-    (Add t <$> (spaces *> char '+' *> spaces *> add))
-        <|> (Sub t <$> (spaces *> char '-' *> spaces *> add))
-        <|> pure t
+add = term `chainl1` addop
+
+addop :: Parser (Expr -> Expr -> Expr)
+addop = Add <$ char '+' <|> Sub <$ char '-'
 
 
 -- term ::= unary | unary ('*' unary |'/' unary)
 term :: Parser Expr
-term = do
-    u <- spaces *> unary
-    (Mul u <$> (spaces *> char '*' *> spaces *> term))
-        <|> (Div u <$> (spaces *> char '/' *> spaces *> term))
-        <|> pure u
+term = unary `chainl1` termop
+
+termop :: Parser (Expr -> Expr -> Expr)
+termop = Mul <$ char '*' <|> Div <$ char '/'
 
 
 -- unary ::= factor | ('+' | '-') factor
