@@ -13,6 +13,7 @@ import           Control.Applicative            ( (<$>)
                                                 )
 import           Text.Parsec.String
 import           Data.Char                      ( digitToInt )
+import           Data.Functor.Identity
 
 
 -- TODO: 型の分割をしたい
@@ -60,7 +61,7 @@ relop = choice $ map
 
 -- add ::= term | term ('+' add | "-" add)
 add :: Parser Expr
-add = term `chainl1` addop
+add = term `chainl1` skipW1 addop
 
 addop :: Parser (Expr -> Expr -> Expr)
 addop = Add <$ char '+' <|> Sub <$ char '-'
@@ -68,7 +69,7 @@ addop = Add <$ char '+' <|> Sub <$ char '-'
 
 -- term ::= unary | unary ('*' unary |'/' unary)
 term :: Parser Expr
-term = unary `chainl1` termop
+term = unary `chainl1` skipW1 termop
 
 termop :: Parser (Expr -> Expr -> Expr)
 termop = Mul <$ char '*' <|> Div <$ char '/'
@@ -86,16 +87,24 @@ unary =
 -- factor ::= '(' expr ')' | nat
 factor :: Parser Expr
 factor =
-    (spaces *> char '(' *> spaces *> expr <* spaces <* char ')' <* spaces)
-        <|> spaces
-        *>  nat
-        <*  spaces
+    between (spaces *> char '(' <* spaces) (spaces *> char ')' <* spaces) expr
+        <|> skipW nat
 
 
 -- nat ::= '0' | '1' | '2' | ...
 nat :: Parser Expr
 nat = Nat . read <$> many1 digit
 
+
+-- utils ------------------------
+
+skipW :: Parser Expr -> Parser Expr
+skipW p = spaces *> p <* spaces
+
+skipW1
+    :: Parser (Expr -> Expr -> Expr)
+    -> ParsecT String () Identity (Expr -> Expr -> Expr)
+skipW1 f = spaces *> f <* spaces
 
 parseExpr :: String -> Either ParseError Expr
 parseExpr = parse expr "* ParseError *"
