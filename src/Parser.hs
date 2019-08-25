@@ -1,6 +1,6 @@
 module Parser
     ( expr
-    , parseExpr
+    , parseProgram
     , Expr(..)
     )
 where
@@ -17,6 +17,7 @@ import           Data.Functor.Identity
 
 
 -- TODO: 型の分割をしたい
+type Name = String
 data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
@@ -28,22 +29,34 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Lte Expr Expr       -- 1 <= 2
           | Gte Expr Expr       -- 1 >= 2
           | Nat Int             -- 1,2,..
+          | Var Name
+          | Assign Expr Expr
             deriving Show
 
+
+-- prgoram ::= stmt*
+program :: Parser Expr
+program = stmt
+
+-- stmt ::= expr ";"
+stmt :: Parser Expr
+stmt = expr
 
 -- expr ::= add
 expr :: Parser Expr
 expr = assign
 
-
 -- assigns ::= equality | equality "=" assign
 assign :: Parser Expr
-assign = equality
+assign = equality `chainl1` skipW1 assignop
+
+assignop :: Parser (Expr -> Expr -> Expr)
+assignop = Assign <$ char '='
 
 
 -- equality ::= add | add ("==" relational | "!=" relatoinal)
 equality :: Parser Expr
-equality = relational `chainl1` equalityop
+equality = relational `chainl1` skipW1 equalityop
 
 equalityop :: Parser (Expr -> Expr -> Expr)
 equalityop = choice $ map try [Neq <$ string "!=", Eq <$ string "=="]
@@ -51,7 +64,7 @@ equalityop = choice $ map try [Neq <$ string "!=", Eq <$ string "=="]
 
 -- relational ::= add | add ("<" add | "<=" add | ">" add | ">=" add)
 relational :: Parser Expr
-relational = add `chainl1` relop
+relational = add `chainl1` skipW1 relop
 
 relop :: Parser (Expr -> Expr -> Expr)
 relop = choice $ map
@@ -84,17 +97,20 @@ unary =
         <|> factor
 
 
--- factor ::= '(' expr ')' | nat
+-- factor ::= nat | ident | "(" expr ")"
 factor :: Parser Expr
 factor =
     between (spaces *> char '(' <* spaces) (spaces *> char ')' <* spaces) expr
         <|> skipW nat
+        <|> skipW var
 
 
 -- nat ::= '0' | '1' | '2' | ...
 nat :: Parser Expr
 nat = Nat . read <$> many1 digit
 
+var :: Parser Expr
+var = Var <$> many1 letter
 
 -- utils ------------------------
 
@@ -106,8 +122,8 @@ skipW1
     -> ParsecT String () Identity (Expr -> Expr -> Expr)
 skipW1 f = spaces *> f <* spaces
 
-parseExpr :: String -> Either ParseError Expr
-parseExpr = parse expr "* ParseError *"
+parseProgram :: String -> Either ParseError Expr
+parseProgram = parse program "* ParseError *"
 
 
 -- run expr "1+2"

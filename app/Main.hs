@@ -1,7 +1,7 @@
 module Main where
 
 import           System.Environment             ( getArgs )
-import           Parser                         ( parseExpr
+import           Parser                         ( parseProgram
                                                 , expr
                                                 , Expr(..)
                                                 )
@@ -120,7 +120,7 @@ main = do
         [] -> putStrLn "Incorrect number of arguments"
         _  -> do
             asmHeader
-            case parseExpr (head args) of
+            case parseProgram (head args) of
                 Right e -> gen e
                 Left  e -> print e
             putStrLn $ "    pop rax"
