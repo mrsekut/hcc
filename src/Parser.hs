@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Parser
     ( expr
     , parseProgram
@@ -18,6 +19,7 @@ import           Data.Functor.Identity
 
 -- TODO: 型の分割をしたい
 type Name = String
+data Stmt = Stmt [Expr] deriving Show
 data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
@@ -29,22 +31,24 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Lte Expr Expr       -- 1 <= 2
           | Gte Expr Expr       -- 1 >= 2
           | Nat Int             -- 1,2,..
-          | Var Name
-          | Assign Expr Expr
+          | LVar Name           -- local variable
+          | Assign Expr Expr    -- hoge = 42
             deriving Show
 
 
 -- prgoram ::= stmt*
-program :: Parser Expr
-program = stmt
+program :: Parser Stmt
+program = Stmt <$> many1 stmt
 
 -- stmt ::= expr ";"
 stmt :: Parser Expr
-stmt = expr
+stmt = expr <* semi
+
 
 -- expr ::= add
 expr :: Parser Expr
 expr = assign
+
 
 -- assigns ::= equality | equality "=" assign
 assign :: Parser Expr
@@ -110,7 +114,14 @@ nat :: Parser Expr
 nat = Nat . read <$> many1 digit
 
 var :: Parser Expr
-var = Var <$> many1 letter
+var = LVar <$> many1 letter
+
+
+-- char ------------------------------
+
+semi :: Stream s m Char => ParsecT s u m Char
+semi = char ';'
+
 
 -- utils ------------------------
 
@@ -122,14 +133,38 @@ skipW1
     -> ParsecT String () Identity (Expr -> Expr -> Expr)
 skipW1 f = spaces *> f <* spaces
 
-parseProgram :: String -> Either ParseError Expr
+
+-- parse -------------------------
+
+parseExpr :: String -> Either ParseError Expr
+parseExpr = parse expr "* ParseError *"
+
+parseProgram :: String -> Either ParseError Stmt
 parseProgram = parse program "* ParseError *"
 
 
--- run expr "1+2"
+-- debug -------------------------------
+
+-- $ run expr "1+2"
 -- > Add (Nat 1) (Nat 2)
 run :: Show a => Parser a -> String -> IO ()
 run p input = case parse p "hcc" input of
     Left  err -> putStr "parse error at" >> print err
     Right x   -> print x
 
+
+-- $ run "1+2"
+-- > Add (Nat 1) (Nat 2)
+rune :: String -> IO ()
+rune input = case parse expr "hcc" input of
+    Left  err -> putStr "parse error at" >> print err
+    Right x   -> print x
+
+
+-- $ runp "1+2;4;"
+-- Add (Nat 1) (Nat 2)
+-- Nat 4
+runp :: String -> IO ()
+runp input = case parse program "hcc" input of
+    Left  err       -> putStr "parse error at" >> print err
+    Right (Stmt st) -> mapM_ print st
