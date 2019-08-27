@@ -1,16 +1,23 @@
 .intel_syntax noprefix
 .global hcc
 hcc:
-    push 12
-    push 3
+    push rbp
+    mov rbp, rsp
+    sub rsp, 208
+    mov rax, rbp
+    sub rax, 192
+    push rax
+    push 123
     pop rdi
     pop rax
-    imul rdi
-    push rax
-    push 9
-    pop rdi
-    pop rax
-    sub rax, rdi
+    mov [rax], rdi
+    push rdi
+    mov rax, rbp
+    sub rax, 192
     push rax
     pop rax
+    mov rax, [rax]
+    push rax
+    mov rsp, rbp
+    pop rbp
     ret

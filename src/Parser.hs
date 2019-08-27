@@ -3,6 +3,7 @@ module Parser
     ( expr
     , parseProgram
     , Expr(..)
+    , Stmt(..)
     )
 where
 
@@ -19,7 +20,9 @@ import           Data.Functor.Identity
 
 -- TODO: 型の分割をしたい
 type Name = String
-data Stmt = Stmt [Expr] deriving Show
+data Stmt = Stmt [Expr]
+        --   | Assign Name Expr
+          deriving Show
 data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
@@ -32,9 +35,8 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Gte Expr Expr       -- 1 >= 2
           | Nat Int             -- 1,2,..
           | LVar Name           -- local variable
-          | Assign Expr Expr    -- hoge = 42
+          | Assign Name Expr    -- hoge = 42 TODO: exprではなくない？
             deriving Show
-
 
 -- prgoram ::= stmt*
 program :: Parser Stmt
@@ -50,12 +52,17 @@ expr :: Parser Expr
 expr = assign
 
 
+-- TODO: 結合確認
 -- assigns ::= equality | equality "=" assign
 assign :: Parser Expr
-assign = equality `chainl1` skipW1 assignop
+assign = do
+    e <- skipW equality
+    Assign "x" <$> (char '=' *> skipW assign) <|> pure e
 
-assignop :: Parser (Expr -> Expr -> Expr)
-assignop = Assign <$ char '='
+-- assign = equality `chainl1` skipW1 assignop
+
+-- assignop :: Parser (Expr -> Expr -> Expr)
+-- assignop = Assign <$ char '='
 
 
 -- equality ::= add | add ("==" relational | "!=" relatoinal)

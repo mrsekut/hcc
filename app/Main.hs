@@ -4,17 +4,41 @@ import           System.Environment             ( getArgs )
 import           Parser                         ( parseProgram
                                                 , expr
                                                 , Expr(..)
+                                                , Stmt(..)
                                                 )
 import           Text.Parsec
+import           Data.Char
 
 asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global hcc", "hcc:"]
+prologue =
+    mapM_ putStrLn ["    push rbp", "    mov rbp, rsp", "    sub rsp, 208"]
+epilogue = mapM_ putStrLn ["    mov rsp, rbp", "    pop rbp", "    ret"]
 
+offset :: String -> String
+offset s = show $ (ord (head s) - ord 'a' + 1) * 8
 
 class Reifiable a where
     reify :: a -> [ String ]
 
+
 instance Reifiable Expr where
     reify (Nat i) = ["    push " ++ show i]
+    reify (LVar n) =
+        [ "    mov rax, rbp"
+        , "    sub rax, " ++ offset n
+        , "    push rax"
+        , "    pop rax"
+        , "    mov rax, [rax]"
+        , "    push rax"
+        ]
+    reify (Assign v e) =
+        ["    mov rax, rbp", "    sub rax, " ++ offset v, "    push rax"]
+            ++ reify e
+            ++ [ "    pop rdi"
+               , "    pop rax"
+               , "    mov [rax], rdi"
+               , "    push rdi"
+               ]
     reify (Add e1 e2) =
         reify e1
             ++ reify e2
@@ -112,16 +136,13 @@ gen = mapM_ putStrLn . reify
 
 main :: IO ()
 main = do
-    -- let p = Add (Nat 2) (Nat 3)
-    -- gen p
-
     args <- getArgs
     case args of
         [] -> putStrLn "Incorrect number of arguments"
         _  -> do
             asmHeader
+            prologue
             case parseProgram (head args) of
-                Right e -> gen e
-                Left  e -> print e
-            putStrLn $ "    pop rax"
-            putStrLn $ "    ret"
+                Right (Stmt st) -> mapM_ gen st
+                Left  e         -> print e
+            epilogue
