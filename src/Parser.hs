@@ -2,6 +2,7 @@
 module Parser
     ( expr
     , parseProgram
+    , program
     , Expr(..)
     , Stmt(..)
     )
@@ -22,7 +23,7 @@ import           Data.Functor.Identity
 type Name = String
 data Stmt = Stmt [Expr]
         --   | Assign Name Expr
-          deriving Show
+          deriving (Show, Eq)
 data Expr = Add Expr Expr       -- 1 + 2
           | Sub Expr Expr       -- 1 - 2
           | Mul Expr Expr       -- 1 * 2
@@ -36,7 +37,7 @@ data Expr = Add Expr Expr       -- 1 + 2
           | Nat Int             -- 1,2,..
           | LVar Name           -- local variable
           | Assign Name Expr    -- hoge = 42 TODO: exprではなくない？
-            deriving Show
+            deriving (Show, Eq)
 
 -- prgoram ::= stmt*
 program :: Parser Stmt
