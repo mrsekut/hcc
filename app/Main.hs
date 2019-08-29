@@ -4,12 +4,13 @@ import           System.Environment             ( getArgs )
 import           Parser                         ( parseProgram
                                                 , expr
                                                 , Expr(..)
+                                                , Program(..)
                                                 , BinOp(..)
                                                 , Stmt(..)
                                                 )
 import           Text.Parsec
 import           Data.Char
-
+import           Control.Monad
 
 newLinePrint :: [String] -> IO ()
 newLinePrint = mapM_ putStrLn
@@ -26,6 +27,24 @@ class Reifiable a where
     reify :: a -> [ String ]
 
 
+instance Reifiable Program where
+    reify (Program ss) = ["undefined"] -- TODO:
+    -- reify (Program ss) = reify =<< ss
+    -- reify (Program ss) = join $ fmap reify ss
+
+instance Reifiable Stmt where
+    -- reify (S s) = ["hoge"]
+    reify (S s) = reify =<< s
+    reify (Assign v e) =
+        ["    mov rax, rbp", "    sub rax, " ++ offset v, "    push rax"]
+            ++ reify e
+            ++ [ "    pop rdi"
+               , "    pop rax"
+               , "    mov [rax], rdi"
+               , "    push rdi"
+               ]
+
+
 instance Reifiable Expr where
     reify (Nat i) = ["    push " ++ show i]
     reify (LVar n) =
@@ -36,14 +55,6 @@ instance Reifiable Expr where
         , "    mov rax, [rax]"
         , "    push rax"
         ]
-    reify (Assign v e) =
-        ["    mov rax, rbp", "    sub rax, " ++ offset v, "    push rax"]
-            ++ reify e
-            ++ [ "    pop rdi"
-               , "    pop rax"
-               , "    mov [rax], rdi"
-               , "    push rdi"
-               ]
     reify (B Add e1 e2) =
         reify e1
             ++ reify e2
@@ -135,7 +146,7 @@ instance Reifiable Expr where
                ]
 
 
-gen :: Expr -> IO ()
+gen :: Stmt -> IO ()
 gen = mapM_ putStrLn . reify
 
 
@@ -148,6 +159,6 @@ main = do
             asmHeader
             prologue
             case parseProgram (head args) of
-                Right (Stmt st) -> mapM_ gen st
-                Left  e         -> print e
+                Right (Program pr) -> mapM_ gen pr
+                Left  e            -> print e
             epilogue

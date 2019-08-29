@@ -1,8 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Parser
     ( expr
+    , stmt
     , parseProgram
     , program
+    , Program(..)
     , BinOp(..)
     , Expr(..)
     , Stmt(..)
@@ -20,40 +22,40 @@ import           Data.Char                      ( digitToInt )
 import           Data.Functor.Identity
 
 
--- TODO: 型の分割をしたい
-type Name = String
 
--- data Program = Program [Stmt]
-data Stmt = Stmt [Expr]
-        --   | Assign Name Expr
+data Program = Program [Stmt] deriving (Show, Eq)
+data Stmt = S [Expr]
+          | Assign Name Expr
           deriving (Show, Eq)
 
-data BinOp = Add | Sub | Mul | Div | Eq | Neq | Lt | Lte | Gt | Gte deriving (Show, Eq)
 data Expr = B BinOp Expr Expr
           | Nat Int
           | LVar Name
-          | Assign Name Expr
             deriving (Show, Eq)
 
+data BinOp = Add | Sub | Mul | Div | Eq | Neq | Lt | Lte | Gt | Gte deriving (Show, Eq)
+type Name = String
+
 -- prgoram ::= stmt*
-program :: Parser Stmt
-program = Stmt <$> many1 stmt
-
--- stmt ::= expr ";"
-stmt :: Parser Expr
-stmt = expr <* semi
+program :: Parser Program
+program = Program <$> many1 stmt
 
 
--- expr ::= add
-expr :: Parser Expr
-expr = assign
+-- stmt ::= expr ";" | assigns
+stmt :: Parser Stmt
+stmt = try assign <* semi <|> S <$> many1 expr <* semi
 
 
--- assigns ::= equality | equality "=" assign
-assign :: Parser Expr
+-- assigns ::= ident | ident "=" assign
+assign :: Parser Stmt
 assign = do
-    e <- skipW equality
-    Assign "x" <$> (char '=' *> skipW assign) <|> pure e
+    e <- skipW ident
+    Assign "x" <$> (char '=' *> skipW expr)
+-- TODO:-- ident = LVar <$> many1 letter
+
+-- expr ::= equality
+expr :: Parser Expr
+expr = equality
 
 
 -- equality ::= add | add ("==" relational | "!=" relatoinal)
@@ -109,15 +111,16 @@ factor :: Parser Expr
 factor =
     between (spaces *> char '(' <* spaces) (spaces *> char ')' <* spaces) expr
         <|> skipW nat
-        <|> skipW var
+        <|> skipW ident
 
 
 -- nat ::= '0' | '1' | '2' | ...
 nat :: Parser Expr
 nat = Nat . read <$> many1 digit
 
-var :: Parser Expr
-var = LVar <$> many1 letter
+-- ident
+ident :: Parser Expr
+ident = LVar <$> many1 letter
 
 
 -- char ------------------------------
@@ -142,7 +145,7 @@ skipW1 f = spaces *> f <* spaces
 parseExpr :: String -> Either ParseError Expr
 parseExpr = parse expr "* ParseError *"
 
-parseProgram :: String -> Either ParseError Stmt
+parseProgram :: String -> Either ParseError Program
 parseProgram = parse program "* ParseError *"
 
 
@@ -169,5 +172,5 @@ rune input = case parse expr "hcc" input of
 -- Nat 4
 runp :: String -> IO ()
 runp input = case parse program "hcc" input of
-    Left  err       -> putStr "parse error at" >> print err
-    Right (Stmt st) -> mapM_ print st
+    Left  err          -> putStr "parse error at" >> print err
+    Right (Program pr) -> mapM_ print pr
