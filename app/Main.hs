@@ -29,11 +29,8 @@ class Reifiable a where
 
 instance Reifiable Program where
     reify (Program ss) = ["undefined"] -- TODO:
-    -- reify (Program ss) = reify =<< ss
-    -- reify (Program ss) = join $ fmap reify ss
 
 instance Reifiable Stmt where
-    -- reify (S s) = ["hoge"]
     reify (S s) = reify =<< s
     reify (Assign v e) =
         ["    mov rax, rbp", "    sub rax, " ++ offset v, "    push rax"]
