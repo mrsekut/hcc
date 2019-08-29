@@ -9,10 +9,13 @@ import           Parser                         ( parseProgram
 import           Text.Parsec
 import           Data.Char
 
-asmHeader = mapM_ putStrLn [".intel_syntax noprefix", ".global hcc", "hcc:"]
-prologue =
-    mapM_ putStrLn ["    push rbp", "    mov rbp, rsp", "    sub rsp, 208"]
-epilogue = mapM_ putStrLn ["    mov rsp, rbp", "    pop rbp", "    ret"]
+
+newLinePrint :: [String] -> IO ()
+newLinePrint = mapM_ putStrLn
+
+asmHeader = newLinePrint [".intel_syntax noprefix", ".global hcc", "hcc:"]
+prologue = newLinePrint ["    push rbp", "    mov rbp, rsp", "    sub rsp, 208"]
+epilogue = newLinePrint ["    mov rsp, rbp", "    pop rbp", "    ret"]
 
 offset :: String -> String
 offset s = show $ (ord (head s) - ord 'a' + 1) * 8
