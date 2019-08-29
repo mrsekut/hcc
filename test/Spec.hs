@@ -49,4 +49,4 @@ main = hspec $ describe "Parser" $ do
   it "Assign" $ do
     parseStmt "x = 2*3-2/3;" `shouldBe` Assign "x" (B Sub (B Mul (Nat 2) (Nat 3)) (B Div (Nat 2) (Nat 3)))
     parseStmt "x;" `shouldBe` S [LVar "x"]
-    -- parseStmt "x=3; x;" `shouldBe` S [LVar "x"]
+    -- parseStmt "x = 3; x;" `shouldBe` S [LVar "x"] -- TODO:

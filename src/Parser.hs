@@ -49,9 +49,9 @@ stmt = try assign <* semi <|> S <$> many1 expr <* semi
 -- assigns ::= ident | ident "=" assign
 assign :: Parser Stmt
 assign = do
-    e <- skipW ident
-    Assign "x" <$> (char '=' *> skipW expr)
--- TODO:-- ident = LVar <$> many1 letter
+    e <- many1 letter
+    Assign e <$> (spaces *> char '=' *> skipW expr)
+
 
 -- expr ::= equality
 expr :: Parser Expr
