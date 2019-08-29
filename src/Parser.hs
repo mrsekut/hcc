@@ -3,6 +3,7 @@ module Parser
     ( expr
     , parseProgram
     , program
+    , BinOp(..)
     , Expr(..)
     , Stmt(..)
     )
@@ -21,22 +22,17 @@ import           Data.Functor.Identity
 
 -- TODO: 型の分割をしたい
 type Name = String
+
+-- data Program = Program [Stmt]
 data Stmt = Stmt [Expr]
         --   | Assign Name Expr
           deriving (Show, Eq)
-data Expr = Add Expr Expr       -- 1 + 2
-          | Sub Expr Expr       -- 1 - 2
-          | Mul Expr Expr       -- 1 * 2
-          | Div Expr Expr       -- 1 / 2
-          | Eq Expr Expr        -- 1 == 2
-          | Neq Expr Expr       -- 1 == 2
-          | Lt Expr Expr        -- 1 < 2
-          | Gt Expr Expr        -- 1 > 2
-          | Lte Expr Expr       -- 1 <= 2
-          | Gte Expr Expr       -- 1 >= 2
-          | Nat Int             -- 1,2,..
-          | LVar Name           -- local variable
-          | Assign Name Expr    -- hoge = 42 TODO: exprではなくない？
+
+data BinOp = Add | Sub | Mul | Div | Eq | Neq | Lt | Lte | Gt | Gte deriving (Show, Eq)
+data Expr = B BinOp Expr Expr
+          | Nat Int
+          | LVar Name
+          | Assign Name Expr
             deriving (Show, Eq)
 
 -- prgoram ::= stmt*
@@ -53,17 +49,11 @@ expr :: Parser Expr
 expr = assign
 
 
--- TODO: 結合確認
 -- assigns ::= equality | equality "=" assign
 assign :: Parser Expr
 assign = do
     e <- skipW equality
     Assign "x" <$> (char '=' *> skipW assign) <|> pure e
-
--- assign = equality `chainl1` skipW1 assignop
-
--- assignop :: Parser (Expr -> Expr -> Expr)
--- assignop = Assign <$ char '='
 
 
 -- equality ::= add | add ("==" relational | "!=" relatoinal)
@@ -71,7 +61,7 @@ equality :: Parser Expr
 equality = relational `chainl1` skipW1 equalityop
 
 equalityop :: Parser (Expr -> Expr -> Expr)
-equalityop = choice $ map try [Neq <$ string "!=", Eq <$ string "=="]
+equalityop = choice $ map try [B Neq <$ string "!=", B Eq <$ string "=="]
 
 
 -- relational ::= add | add ("<" add | "<=" add | ">" add | ">=" add)
@@ -81,7 +71,11 @@ relational = add `chainl1` skipW1 relop
 relop :: Parser (Expr -> Expr -> Expr)
 relop = choice $ map
     try
-    [Lte <$ string "<=", Lt <$ string "<", Gte <$ string ">=", Gt <$ string ">"]
+    [ B Lte <$ string "<="
+    , B Lt <$ string "<"
+    , B Gte <$ string ">="
+    , B Gt <$ string ">"
+    ]
 
 
 -- add ::= term | term ('+' add | "-" add)
@@ -89,7 +83,8 @@ add :: Parser Expr
 add = term `chainl1` skipW1 addop
 
 addop :: Parser (Expr -> Expr -> Expr)
-addop = Add <$ char '+' <|> Sub <$ char '-'
+addop = B Add <$ char '+' <|> B Sub <$ char '-'
+-- addop = Add <$ char '+'
 
 
 -- term ::= unary | unary ('*' unary |'/' unary)
@@ -97,14 +92,14 @@ term :: Parser Expr
 term = unary `chainl1` skipW1 termop
 
 termop :: Parser (Expr -> Expr -> Expr)
-termop = Mul <$ char '*' <|> Div <$ char '/'
+termop = B Mul <$ char '*' <|> B Div <$ char '/'
 
 
 -- unary ::= factor | ('+' | '-') factor
 unary :: Parser Expr
 unary =
     (spaces *> char '+' *> factor)
-        <|> Sub (Nat 0)
+        <|> B Sub (Nat 0)
         <$> (spaces *> char '-' *> factor)
         <|> factor
 

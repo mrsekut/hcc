@@ -4,19 +4,21 @@ hcc:
     push rbp
     mov rbp, rsp
     sub rsp, 208
-    mov rax, rbp
-    sub rax, 192
-    push rax
-    push 123
+    push 1
+    push 2
+    push 3
+    push 2
     pop rdi
     pop rax
-    mov [rax], rdi
-    push rdi
-    mov rax, rbp
-    sub rax, 192
+    sub rax, rdi
     push rax
+    pop rdi
     pop rax
-    mov rax, [rax]
+    imul rdi
+    push rax
+    pop rdi
+    pop rax
+    add rax, rdi
     push rax
     mov rsp, rbp
     pop rbp

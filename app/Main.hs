@@ -4,6 +4,7 @@ import           System.Environment             ( getArgs )
 import           Parser                         ( parseProgram
                                                 , expr
                                                 , Expr(..)
+                                                , BinOp(..)
                                                 , Stmt(..)
                                                 )
 import           Text.Parsec
@@ -14,7 +15,8 @@ newLinePrint :: [String] -> IO ()
 newLinePrint = mapM_ putStrLn
 
 asmHeader = newLinePrint [".intel_syntax noprefix", ".global hcc", "hcc:"]
-prologue = newLinePrint ["    push rbp", "    mov rbp, rsp", "    sub rsp, 208"]
+prologue =
+    newLinePrint ["    push rbp", "    mov rbp, rsp", "    sub rsp, 208"]
 epilogue = newLinePrint ["    mov rsp, rbp", "    pop rbp", "    ret"]
 
 offset :: String -> String
@@ -42,7 +44,7 @@ instance Reifiable Expr where
                , "    mov [rax], rdi"
                , "    push rdi"
                ]
-    reify (Add e1 e2) =
+    reify (B Add e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -50,7 +52,7 @@ instance Reifiable Expr where
                , "    add rax, rdi"
                , "    push rax"
                ]
-    reify (Sub e1 e2) =
+    reify (B Sub e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -58,11 +60,11 @@ instance Reifiable Expr where
                , "    sub rax, rdi"
                , "    push rax"
                ]
-    reify (Mul e1 e2) =
+    reify (B Mul e1 e2) =
         reify e1
             ++ reify e2
             ++ ["    pop rdi", "    pop rax", "    imul rdi", "    push rax"]
-    reify (Div e1 e2) =
+    reify (B Div e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -71,7 +73,7 @@ instance Reifiable Expr where
                , "    idiv rdi"
                , "    push rax"
                ]
-    reify (Eq e1 e2) =
+    reify (B Eq e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -81,7 +83,7 @@ instance Reifiable Expr where
                , "    movzb rax, al"
                , "    push rax"
                ]
-    reify (Neq e1 e2) =
+    reify (B Neq e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -91,7 +93,7 @@ instance Reifiable Expr where
                , "    movzb rax, al"
                , "    push rax"
                ]
-    reify (Lt e1 e2) =
+    reify (B Lt e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -101,7 +103,7 @@ instance Reifiable Expr where
                , "    movzb rax, al"
                , "    push rax"
                ]
-    reify (Lte e1 e2) =
+    reify (B Lte e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -111,7 +113,7 @@ instance Reifiable Expr where
                , "    movzb rax, al"
                , "    push rax"
                ]
-    reify (Gt e1 e2) =
+    reify (B Gt e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
@@ -121,7 +123,7 @@ instance Reifiable Expr where
                , "    movzb rax, al"
                , "    push rax"
                ]
-    reify (Gte e1 e2) =
+    reify (B Gte e1 e2) =
         reify e1
             ++ reify e2
             ++ [ "    pop rdi"
