@@ -5,7 +5,6 @@ module Parser
     , parseProgram
     , program
     , Program(..)
-    , BinOp(..)
     , Expr(..)
     , Stmt(..)
     )
@@ -28,12 +27,23 @@ data Stmt = S [Expr]
           | Assign Name Expr
           deriving (Show, Eq)
 
-data Expr = B BinOp Expr Expr
+data Expr = Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Div Expr Expr
+
+          | Eq  Expr Expr
+          | Neq Expr Expr
+
+          | Lt  Expr Expr
+          | Lte Expr Expr
+          | Gt  Expr Expr
+          | Gte Expr Expr
+
           | Nat Int
           | LVar Name
             deriving (Show, Eq)
 
-data BinOp = Add | Sub | Mul | Div | Eq | Neq | Lt | Lte | Gt | Gte deriving (Show, Eq)
 type Name = String
 
 -- prgoram ::= stmt*
@@ -63,7 +73,7 @@ equality :: Parser Expr
 equality = relational `chainl1` skipW1 equalityop
 
 equalityop :: Parser (Expr -> Expr -> Expr)
-equalityop = choice $ map try [B Neq <$ string "!=", B Eq <$ string "=="]
+equalityop = choice $ map try [Neq <$ string "!=", Eq <$ string "=="]
 
 
 -- relational ::= add | add ("<" add | "<=" add | ">" add | ">=" add)
@@ -73,11 +83,7 @@ relational = add `chainl1` skipW1 relop
 relop :: Parser (Expr -> Expr -> Expr)
 relop = choice $ map
     try
-    [ B Lte <$ string "<="
-    , B Lt <$ string "<"
-    , B Gte <$ string ">="
-    , B Gt <$ string ">"
-    ]
+    [Lte <$ string "<=", Lt <$ string "<", Gte <$ string ">=", Gt <$ string ">"]
 
 
 -- add ::= term | term ('+' add | "-" add)
@@ -85,7 +91,7 @@ add :: Parser Expr
 add = term `chainl1` skipW1 addop
 
 addop :: Parser (Expr -> Expr -> Expr)
-addop = B Add <$ char '+' <|> B Sub <$ char '-'
+addop = Add <$ char '+' <|> Sub <$ char '-'
 -- addop = Add <$ char '+'
 
 
@@ -94,14 +100,14 @@ term :: Parser Expr
 term = unary `chainl1` skipW1 termop
 
 termop :: Parser (Expr -> Expr -> Expr)
-termop = B Mul <$ char '*' <|> B Div <$ char '/'
+termop = Mul <$ char '*' <|> Div <$ char '/'
 
 
 -- unary ::= factor | ('+' | '-') factor
 unary :: Parser Expr
 unary =
     (spaces *> char '+' *> factor)
-        <|> B Sub (Nat 0)
+        <|> Sub (Nat 0)
         <$> (spaces *> char '-' *> factor)
         <|> factor
 
