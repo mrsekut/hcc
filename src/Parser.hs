@@ -53,7 +53,7 @@ program = Program <$> many1 stmt
 
 -- stmt ::= expr ";" | assigns
 stmt :: Parser Stmt
-stmt = try assign <* semi <|> S <$> many1 expr <* semi
+stmt = spaces *> (try assign <* semi <|> S <$> many1 expr <* semi)
 
 
 -- assigns ::= ident | ident "=" assign

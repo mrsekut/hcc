@@ -3,8 +3,8 @@ import           Test.Hspec
 import           Parser
 
 
-parseSucc :: String -> Program
-parseSucc input = case parse program "Example" input of
+parseP :: String -> Program
+parseP input = case parse program "Example" input of
   Left{}    -> error "Parse failure"
   Right str -> str
 
@@ -50,4 +50,4 @@ main = hspec $ describe "Parser" $ do
     parseStmt "x = 2*3-2/3;"
       `shouldBe` Assign "x" (Sub (Mul (Nat 2) (Nat 3)) (Div (Nat 2) (Nat 3)))
     parseStmt "x;" `shouldBe` S [LVar "x"]
-    -- parseStmt "x = 3; x;" `shouldBe` S [LVar "x"] -- TODO:
+    parseP "x = 3; x;" `shouldBe` Program [Assign "x" (Nat 3), S [LVar "x"]]
