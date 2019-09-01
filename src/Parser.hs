@@ -19,13 +19,11 @@ import           Control.Applicative            ( (<$>)
 import           Text.Parsec.String
 import           Data.Char                      ( digitToInt )
 import           Data.Functor.Identity
+import qualified Data.Map                      as M
 
 
-
-data Program = Program [Stmt] deriving (Show, Eq)
-data Stmt = S [Expr]
-          | Assign Name Expr
-          deriving (Show, Eq)
+type Name = String
+type Offset = Int
 
 data Expr = Add Expr Expr
           | Sub Expr Expr
@@ -44,16 +42,23 @@ data Expr = Add Expr Expr
           | LVar Name
             deriving (Show, Eq)
 
-type Name = String
+-- data Env = Map Name Offset deriving (Show, Eq)
+
+data Stmt = S [Expr]
+          | Assign Name Expr
+          deriving (Show, Eq)
+
+data Program = Program [Stmt] deriving (Show, Eq)
+
 
 -- prgoram ::= stmt*
 program :: Parser Program
 program = Program <$> many1 stmt
 
 
--- stmt ::= expr ";" | assigns
+-- stmt ::= expr ";" | assigns ";"
 stmt :: Parser Stmt
-stmt = spaces *> (try assign <* semi <|> S <$> many1 expr <* semi)
+stmt = spaces *> (try assign <|> S <$> many1 expr) <* semi
 
 
 -- assigns ::= ident | ident "=" assign
