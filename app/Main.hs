@@ -39,6 +39,12 @@ instance Reifiable Stmt where
                , "    mov [rax], rdi"
                , "    push rdi"
                ]
+    reify (Return e) = reify e ++
+                       ["    pop rax"
+                       , "    mov rsp, rbp"
+                       , "    pop rbp"
+                       , "    ret"
+                       ]
 
 
 instance Reifiable Expr where

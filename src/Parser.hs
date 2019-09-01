@@ -45,10 +45,11 @@ data Expr = Add Expr Expr
 -- data Env = Map Name Offset deriving (Show, Eq)
 
 data Stmt = S [Expr]
+          | Return Expr
           | Assign Name Expr
           deriving (Show, Eq)
 
-data Program = Program [Stmt] deriving (Show, Eq)
+newtype Program = Program [Stmt] deriving (Show, Eq)
 
 
 -- prgoram ::= stmt*
@@ -56,9 +57,15 @@ program :: Parser Program
 program = Program <$> many1 stmt
 
 
--- stmt ::= expr ";" | assigns ";"
+-- stmt ::= assigns ";" | expr ";" | "return" expr ";"
 stmt :: Parser Stmt
-stmt = spaces *> (try assign <|> S <$> many1 expr) <* semi
+stmt = spaces *> choice (map try [assign, rtn, exprs]) <* semi
+
+exprs :: Parser Stmt
+exprs = S <$> many1 expr
+
+rtn :: Parser Stmt
+rtn = Return <$> (string "return" *> many1 (char ' ') *> expr)
 
 
 -- assigns ::= ident | ident "=" assign
@@ -132,7 +139,6 @@ nat = Nat . read <$> many1 digit
 -- ident
 ident :: Parser Expr
 ident = LVar <$> many1 letter
-
 
 -- char ------------------------------
 

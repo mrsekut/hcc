@@ -51,3 +51,9 @@ main = hspec $ describe "Parser" $ do
       `shouldBe` Assign "x" (Sub (Mul (Nat 2) (Nat 3)) (Div (Nat 2) (Nat 3)))
     parseStmt "x;" `shouldBe` S [LVar "x"]
     parseP "x = 3; x;" `shouldBe` Program [Assign "x" (Nat 3), S [LVar "x"]]
+    -- parseP "x x x;" `shouldBe`  -- NG
+
+  it "return" $ do
+    parseStmt "return  3*3;"  `shouldBe` Return (Mul (Nat 3) (Nat 3))
+    -- parseExpr "return3;"  `shouldBe` -- OK: `return3`という変数名 PENDING: 現状は変数名に数値は入れられないので保留
+    -- parseExpr "return3*3;"  `shouldBe` -- OK: `hoge * 3`と同じ形
