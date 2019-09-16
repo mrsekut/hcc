@@ -46,7 +46,8 @@ data Stmt = S [Expr]
           | Return Expr
           | Assign Name Expr
           | If Expr Stmt Stmt
-        --   | While Expr Stmt
+          | While Expr Stmt
+          | For Stmt Expr Expr Stmt
         --   | For Expr Expr Expr Stmt
           | Nop
           deriving (Show, Eq)
@@ -61,7 +62,8 @@ program = Program <$> many1 stmt
 
 -- stmt ::= assigns ";" | expr ";" | "return" expr ";"
 stmt :: Parser Stmt
-stmt = spaces *> choice (map try [assign, return', if', exprs]) <* semi
+stmt =
+    spaces *> choice (map try [assign, return', if', while, for, exprs]) <* semi
 
 exprs :: Parser Stmt
 exprs = S <$> many1 expr
@@ -76,6 +78,31 @@ if' = do
     s1 <- braces stmt
     s2 <- (string "else" *> braces stmt) <|> return Nop
     return $ If b s1 s2
+
+while :: Parser Stmt
+while = do
+    string "while"
+    b <- parens expr
+    s <- braces stmt
+    return $ While b s
+
+-- TODO: clean
+for :: Parser Stmt
+for = do
+    string "for"
+    spaces
+    char '('
+    spaces
+    pre <- stmt <|> Nop <$ semi
+    spaces
+    cond <- (expr <|> return (Nat 1)) <* semi
+    spaces
+    post <- expr <|> return (Nat 0)
+    spaces
+    char ')'
+    spaces
+    body <- braces stmt
+    return $ For pre cond post body
 
 
 -- assigns ::= ident | ident "=" assign
@@ -159,12 +186,12 @@ semi = char ';'
 -- utils ------------------------
 
 parens :: Parser a -> Parser a
-parens p = spaces *> char '(' *> spaces *> p <* spaces <* char ')' <* spaces
+parens p = spaces *> char '(' *> skipW p <* char ')' <* spaces
 
 braces :: Parser a -> Parser a
-braces p = spaces *> char '{' *> spaces *> p <* spaces <* char '}' <* spaces
+braces p = spaces *> char '{' *> skipW p <* char '}' <* spaces
 
-skipW :: Parser Expr -> Parser Expr
+skipW :: Parser a -> Parser a
 skipW p = spaces *> p <* spaces
 
 skipW1

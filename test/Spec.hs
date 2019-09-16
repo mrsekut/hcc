@@ -63,3 +63,13 @@ main = hspec $ describe "Parser" $ do
       `shouldBe` If (Gt (Nat 2) (Nat 1)) (Return (Nat 4)) (Return (Nat 5))
     parseStmt "if ( 2>1 ) { return 4; };"
       `shouldBe` If (Gt (Nat 2) (Nat 1)) (Return (Nat 4)) Nop
+
+  it "while" $ parseStmt "while ( 1<2 ) { return 3; };"
+      `shouldBe` While (Lt (Nat 1) (Nat 2)) (Return (Nat 3))
+
+  it "for" $ do
+    parseStmt "for ( i=1; i<10; i+1 ) { return i; };"
+      `shouldBe` For (Assign "i" (Nat 1)) (Lt (LVar "i") (Nat 10)) (Add (LVar "i") (Nat 1)) (Return (LVar "i"))
+    parseStmt " for (;;) { return 1; };"
+      `shouldBe` For Nop (Nat 1) (Nat 0) (Return (Nat 1))
+
