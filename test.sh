@@ -7,9 +7,9 @@ try() {
     rm -r $epath
     mkdir $epath
     while read row; do
-        index=$(echo ${row} | cut -d , -f1)
-        input=$(echo ${row} | cut -d , -f2)
-        expected=$(echo ${row} | cut -d , -f3)
+        index=$(echo "${row}" | cut -d , -f1)
+        input=$(echo "${row}" | cut -d , -f2)
+        expected=$(echo "${row}" | cut -d , -f3)
 
         gcc -g main.c $path/tmps/$index.s -o $epath/$index
         actual=$($epath/$index)
