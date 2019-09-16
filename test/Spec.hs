@@ -57,3 +57,9 @@ main = hspec $ describe "Parser" $ do
     parseStmt "return  3*3;"  `shouldBe` Return (Mul (Nat 3) (Nat 3))
     -- parseExpr "return3;"  `shouldBe` -- OK: `return3`という変数名 PENDING: 現状は変数名に数値は入れられないので保留
     -- parseExpr "return3*3;"  `shouldBe` -- OK: `hoge * 3`と同じ形
+
+  it "if" $ do
+    parseStmt "if ( 2>1 ) { return 4; } else { return 5; };"
+      `shouldBe` If (Gt (Nat 2) (Nat 1)) (Return (Nat 4)) (Return (Nat 5))
+    parseStmt "if ( 2>1 ) { return 4; };"
+      `shouldBe` If (Gt (Nat 2) (Nat 1)) (Return (Nat 4)) Nop

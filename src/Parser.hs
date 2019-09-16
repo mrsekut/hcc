@@ -23,7 +23,6 @@ import qualified Data.Map                      as M
 
 
 type Name = String
-type Offset = Int
 
 data Expr = Add Expr Expr
           | Sub Expr Expr
@@ -42,11 +41,14 @@ data Expr = Add Expr Expr
           | LVar Name
             deriving (Show, Eq)
 
--- data Env = Map Name Offset deriving (Show, Eq)
 
 data Stmt = S [Expr]
           | Return Expr
           | Assign Name Expr
+          | If Expr Stmt Stmt
+        --   | While Expr Stmt
+        --   | For Expr Expr Expr Stmt
+          | Nop
           deriving (Show, Eq)
 
 newtype Program = Program [Stmt] deriving (Show, Eq)
@@ -59,13 +61,21 @@ program = Program <$> many1 stmt
 
 -- stmt ::= assigns ";" | expr ";" | "return" expr ";"
 stmt :: Parser Stmt
-stmt = spaces *> choice (map try [assign, rtn, exprs]) <* semi
+stmt = spaces *> choice (map try [assign, return', if', exprs]) <* semi
 
 exprs :: Parser Stmt
 exprs = S <$> many1 expr
 
-rtn :: Parser Stmt
-rtn = Return <$> (string "return" *> many1 (char ' ') *> expr)
+return' :: Parser Stmt
+return' = Return <$> (string "return" *> many1 (char ' ') *> expr)
+
+if' :: Parser Stmt
+if' = do
+    string "if"
+    b  <- parens expr
+    s1 <- braces stmt
+    s2 <- (string "else" *> braces stmt) <|> return Nop
+    return $ If b s1 s2
 
 
 -- assigns ::= ident | ident "=" assign
@@ -147,6 +157,12 @@ semi = char ';'
 
 
 -- utils ------------------------
+
+parens :: Parser a -> Parser a
+parens p = spaces *> char '(' *> spaces *> p <* spaces <* char ')' <* spaces
+
+braces :: Parser a -> Parser a
+braces p = spaces *> char '{' *> spaces *> p <* spaces <* char '}' <* spaces
 
 skipW :: Parser Expr -> Parser Expr
 skipW p = spaces *> p <* spaces
