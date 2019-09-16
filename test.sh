@@ -1,21 +1,27 @@
 #!/bin/bash
+
+path="./test/tests"
+epath="$path/execs"
+
 try() {
-    expected="$1"
-    input="$2"
+    rm -r $epath
+    mkdir $epath
+    while read row; do
+        index=$(echo ${row} | cut -d , -f1)
+        input=$(echo ${row} | cut -d , -f2)
+        expected=$(echo ${row} | cut -d , -f3)
 
-    gcc -o tmp tmp.s
-    ./tmp
-    actual="$?"
+        gcc -g main.c $path/tmps/$index.s -o $epath/$index
+        actual=$($epath/$index)
+        if [ "$actual" = "$expected" ]; then
+            echo "$index: $input => $actual"
+        else
+            echo "$expected expected, but got $actual"
+            exit 1
+        fi
 
-    if [ "$actual" = "$expected" ]; then
-        echo "$input => $actual"
-    else
-        echo "$expected expected, but got $actual"
-        exit 1
-    fi
+    done <./test/tests/tests.csv
 }
 
-try 0 0
-try 42 42
-
+try
 echo OK

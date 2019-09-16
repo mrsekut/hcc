@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -f tmps
+mkdir tmps
 while read row; do
     index=$(echo ${row} | cut -d , -f1)
     input=$(echo ${row} | cut -d , -f2)

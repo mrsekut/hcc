@@ -8,3 +8,6 @@ hcc
 
 9cc*
 mmap_address.bin
+
+execs/
+tmps/
