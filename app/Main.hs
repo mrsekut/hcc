@@ -40,11 +40,45 @@ instance Reifiable Stmt where
                , "    push rdi"
                ]
     reify (Return e) = reify e ++
-                       ["    pop rax"
+                       [ "    pop rax"
                        , "    mov rsp, rbp"
                        , "    pop rbp"
                        , "    ret"
                        ]
+    reify (If b s1 s2) = case s2 of
+        Nop -> reify b ++
+                       [ "    pop rax"
+                       , "    cmp rax, 0"
+                       , "    je .LendXXX" -- FIXME:
+                       ] ++ reify s1 ++
+                       [ ".LendXXX:"]
+        _ -> reify b ++
+                       [ "    pop rax"
+                       , "    cmp rax, 0"
+                       , "    je .LelseXXX" -- FIXME:
+                       ] ++ reify s1 ++
+                       [ "    jmp .LendXXX"
+                       , ".LelseXXX:"
+                       ] ++ reify s2 ++
+                       [ ".LendXXX:"]
+    reify (While e s) =  [".LbeginXXX:"]
+                       ++ reify e ++
+                       [ "    pop rax"
+                       , "    cmp rax, 0"
+                       , "    je  .LendXXX"
+                       ] ++ reify s ++
+                       [ "    jmp .LbeginXXX"
+                       , ".LendXXX:"
+                       ]
+    reify (For pre cond post body) = reify pre ++ -- TODO: Nop, 1, 0のときの処理
+                              [".LbeginXXX:"]
+                              ++ reify cond ++
+                              [ "    pop rax"
+                              , "    cmp rax, 0"
+                              , "    je  .LendXXX"
+                              ] ++ reify body ++ reify post ++
+                              [ "    jmp  .LbeginXXX"
+                              , ".LendXXX:"]
 
 
 instance Reifiable Expr where

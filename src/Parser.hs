@@ -48,7 +48,6 @@ data Stmt = S [Expr]
           | If Expr Stmt Stmt
           | While Expr Stmt
           | For Stmt Expr Expr Stmt
-        --   | For Expr Expr Expr Stmt
           | Nop
           deriving (Show, Eq)
 
